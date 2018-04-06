@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Persistence;
+using Akka.Persistence.Query;
+using Akka.Streams.Actors;
+using Akka.Streams.Dsl;
 using AkkaES.Business.Customers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,9 +17,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Reactive.Streams;
 
 namespace AkkaES.Web
 {
+    
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -75,6 +81,9 @@ namespace AkkaES.Web
 
             var akkaSystem = ActorSystem.Create("akkaes", config);
             akkaSystem.ActorOf<CustomerCoordinator>("CustomerCoordinator");
+            akkaSystem.ActorOf<CustomersView>("CustomersView");
+
+
             services.AddSingleton(typeof(ActorSystem), (serviceProvider) => akkaSystem);
 
             services.AddMvc(options =>

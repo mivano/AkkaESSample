@@ -26,8 +26,11 @@ namespace AkkaES.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return NotFound();
-            // _actorSystem.ActorSelection("CustomerCoordinator")
+            var actor = _actorSystem.ActorSelection("/user/CustomersView");
+            var items = await actor.Ask<CustomersView.CustomerList>(new CustomersView.GetCustomers())
+                .ConfigureAwait(false);
+
+            return Ok(items.Customers);
         }
 
         // GET api/values/5
