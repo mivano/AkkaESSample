@@ -5,6 +5,12 @@ namespace AkkaES.Business.Customers
 {
     public class CustomerBaseCommand  : IAddressed, ICommand
     {
-        public Guid RecipientId { get; }
+        public CustomerBaseCommand(Guid id)
+        {
+            Id = id;
+        }
+        public Guid Id { get; }
+
+        public Guid RecipientId => Id;
     }
 }

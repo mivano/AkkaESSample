@@ -14,4 +14,14 @@ namespace AkkaES.Business.Customers
             Name = name;
         }
     }
+
+    public class CustomerRemovedEvent : IEvent
+    {
+        public Guid Id { get; }
+
+        public CustomerRemovedEvent(Guid id)
+        {
+            Id = id;
+        }
+    }
 }

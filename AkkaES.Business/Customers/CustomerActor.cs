@@ -28,9 +28,32 @@ namespace AkkaES.Business.Customers
 
         private bool Active(object message)
         {
-            return base.ReceiveCommand(message);
+            return ReceiveCommand(message) || message.Match()
+                .With<CreateCustomerCommand>(a =>
+                {
+                    Persist(new CustomerChangedEvent(a.Id, a.Name), Sender);
+                })
+                .With<UpdateCustomerCommand>(a =>
+                {
+                    Persist(new CustomerChangedEvent(a.Id, a.Name), Sender);
+                })
+                .With<RemoveCustomerCommand>(a =>
+                {
+                    Persist(new CustomerRemovedEvent(a.Id), Sender);
+                })
+                .WasHandled;
         }
 
+        private bool Removed(object message)
+        {
+            return message.Match()
+                .With<GetState>(c =>
+                {
+                    // Deleted, so return null
+                    Sender.Tell(null, Self);
+                })
+                .WasHandled;
+        }
 
         protected override bool OnCommand(object message)
         {
@@ -50,8 +73,14 @@ namespace AkkaES.Business.Customers
                   
                     Context.Become(Active);
 
-                    Log.Info("Registered customer {Name} with PersistenceId: {PersistenceId}", e.Name, e.Id);
-                }) ;
+                    Log.Info("Customer {Name} with PersistenceId: {PersistenceId} changed", e.Name, e.Id);
+                })
+                .With<CustomerRemovedEvent>(e =>
+                {
+                    Context.Become(Removed);
+
+                    Log.Info("Customer removed with PersistenceId: {PersistenceId} changed",  e.Id);
+                });
         }
 
         protected override void OnReplaySuccess()
